@@ -6,7 +6,9 @@
 
 מדריך מעשי לבדיקת אסטרטגיית מסחר לפני שמסכנים כסף: מלכודות נתונים, טעויות באקטסט (בדיקה לאחור על נתוני עבר), ספירת ניסיונות וכיול מול רעש.
 
-**לקריאת המאמר:** [PDF בעברית](how-to-test-a-trading-edge-he.pdf) | [PDF (English)](how-to-test-a-trading-edge.pdf)
+**לקריאת המאמר באתר:** [עברית](https://avi-d-data.github.io/how-to-test-a-trading-edge/he/) | [English](https://avi-d-data.github.io/how-to-test-a-trading-edge/)
+
+**להורדה:** [PDF בעברית](how-to-test-a-trading-edge-he.pdf) | [PDF (English)](how-to-test-a-trading-edge.pdf)
 
 ## על מה המאמר
 
