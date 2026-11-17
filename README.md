@@ -6,7 +6,9 @@
 
 A practitioner's guide to testing a trading edge before risking money: data traps, backtesting mistakes, counting attempts and noise calibration.
 
-**Read the article:** [PDF (English)](how-to-test-a-trading-edge.pdf) | [PDF (Hebrew / עברית)](how-to-test-a-trading-edge-he.pdf)
+**Read the article online:** [English](https://avi-d-data.github.io/how-to-test-a-trading-edge/) | [עברית](https://avi-d-data.github.io/how-to-test-a-trading-edge/he/)
+
+**Download:** [PDF (English)](how-to-test-a-trading-edge.pdf) | [PDF (Hebrew / עברית)](how-to-test-a-trading-edge-he.pdf)
 
 ## What this is
 
