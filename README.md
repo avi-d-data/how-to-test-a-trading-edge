@@ -1,3 +1,5 @@
+<div align="left">BS"D</div>
+
 # How to Test a Trading Edge Before Risking Money
 
 *Data traps, noise calibration and counting attempts: a methodology from CFD markets*
