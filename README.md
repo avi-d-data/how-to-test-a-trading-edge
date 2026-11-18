@@ -37,6 +37,6 @@ Backtesting, data quality and integrity, realistic transaction costs, pre-regist
 
 ## About the author
 
-Avi D. I build analysis and testing infrastructure: data cleaning and auditing, experiment and hypothesis design, and tools for testing ideas reliably. I am open to work in data analysis and validation.
+Avi D. I build analysis and testing infrastructure: data cleaning and auditing, experiment and hypothesis design, and tools for testing ideas reliably. I am available for remote, project-based work in data analysis and validation.
 
 To talk, or to critique the method: [avi.d.data@outlook.com](mailto:avi.d.data@outlook.com)
