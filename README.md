@@ -1,135 +1,42 @@
-<!doctype html>
-<html lang="en" dir="ltr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How to Test a Trading Edge Before Risking Money</title>
-<meta name="description" content="A practitioner's guide to testing a trading edge before risking money: data traps, backtesting mistakes, counting attempts and noise calibration.">
-<meta name="author" content="Avi D.">
-<link rel="canonical" href="https://avi-d-data.github.io/how-to-test-a-trading-edge/">
-<link rel="alternate" hreflang="en" href="https://avi-d-data.github.io/how-to-test-a-trading-edge/">
-<link rel="alternate" hreflang="he" href="https://avi-d-data.github.io/how-to-test-a-trading-edge/he/">
-<link rel="alternate" hreflang="x-default" href="https://avi-d-data.github.io/how-to-test-a-trading-edge/">
-<meta property="og:type" content="article">
-<meta property="og:title" content="How to Test a Trading Edge Before Risking Money">
-<meta property="og:description" content="A practitioner's guide to testing a trading edge before risking money: data traps, backtesting mistakes, counting attempts and noise calibration.">
-<meta property="og:url" content="https://avi-d-data.github.io/how-to-test-a-trading-edge/">
-<style>
-:root{--bg:#fff;--fg:#1c2530;--mute:#5b6674;--line:#d9dee5;--acc:#1f4e8c;--box:#eef3f9}
-@media(prefers-color-scheme:dark){:root{--bg:#14191f;--fg:#e4e8ed;--mute:#9aa5b1;--line:#2c3540;--acc:#8ab4ee;--box:#1b2430}}
-*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.7 Georgia,"Noto Serif","Times New Roman","David",serif;padding:0 20px 64px}
-main{max-width:42rem;margin:0 auto}
-header{padding:48px 0 20px;border-bottom:1px solid var(--line);margin-bottom:28px}
-nav{display:flex;gap:18px;flex-wrap:wrap;font:15px/1.4 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;margin-bottom:28px}
-a{color:var(--acc)}
-h1.t{font:700 2.1rem/1.2 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;margin:0 0 12px}
-.sub{font:1.15rem/1.45 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--mute);margin:0 0 10px}
-.by{font:italic 15px system-ui,Arial,sans-serif;color:var(--mute);margin:0}
-h1,h2,h3{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;line-height:1.3}
-article h1{font-size:1.45rem;margin:2.2em 0 .5em}article h2{font-size:1.2rem;margin:1.8em 0 .4em}
-article p,article li{margin:.7em 0}ol,ul{padding-inline-start:1.5em}
-article ul:first-of-type{background:var(--box);padding:14px 20px 14px 36px;border-radius:4px}
-[dir=rtl] article ul:first-of-type{padding:14px 36px 14px 20px}
-u{text-decoration:none}article a u{text-decoration:underline}
-a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.bsd{font-size:.85rem;opacity:.7;margin:0 0 .5rem}
-</style>
-</head>
-<body>
-<main>
-<header>
-<p class="bsd">BS"D</p>
-<nav><a href="https://avi-d-data.github.io/how-to-test-a-trading-edge/he/" hreflang="he">עברית</a><a href="https://github.com/avi-d-data/how-to-test-a-trading-edge/raw/main/how-to-test-a-trading-edge.pdf">Download PDF</a><a href="https://github.com/avi-d-data/how-to-test-a-trading-edge">View on GitHub</a></nav>
-<h1 class="t">How to Test a Trading Edge Before Risking Money</h1>
-<p class="sub">Data traps, noise calibration and counting attempts: a methodology from CFD markets</p>
-<p class="by">By Avi D.</p>
-</header>
-<article>
-<h1 id="abstract">Abstract</h1>
-<p>If you are considering trading CFDs with your own money: this article is not a recommendation to do so, and its purpose is not to discourage you. It is to point out things people tend to skip or overlook. If you decide to go ahead, Section 6 lays out what a serious check requires before you put real money at risk.</p>
-<p>This article describes how I search for an edge in CFD markets, and what happens to most ideas once they are tested seriously. It focuses on methodology rather than results: how to treat data as suspect, how to lock in hypotheses, when counting attempts becomes critical, and what calibrating against noise reveals. Topics include data integrity, realistic transaction costs, pre-defined research protocols, multiple testing and noise calibration. I tested many families of strategies based on price and on external data, and found no edge that met the criteria I set in advance. This is a statement about what was tested only, not a claim about the market.</p>
-<p><strong>In brief, before you risk money:</strong></p>
-<ul>
-<li><p>Make sure your data is clean and your costs are real, not taken from a historical file.</p></li>
-<li><p>Write down the hypothesis and the threshold before testing, and count every attempt.</p></li>
-<li><p>Check that the edge exists without a complex model, against noise data, and on a sample you have not touched.</p></li>
-<li><p>The full checklist is in Section 6.</p></li>
-</ul>
-<h1 id="how-i-work">How I Work</h1>
-<p>My process usually looks like this. First, I take a strategy idea: something I read or heard about, or a pattern that simply looks promising on the chart. I believe that a strategy that cannot be coded is not a strategy, so I translate it into explicit rules in an MQL5 script or indicator. The rules do not have to be exact to the pip (a support or resistance zone, for example, is a zone and not a line), but they can be defined unambiguously. I check that the code identifies on the chart what I intended, and fix it as needed. Second, I export the data from the chart, and up to this point the process is relatively simple. Third, the real work begins: a comprehensive analysis in Python of the data and of the strategy. The following sections deal with this stage.</p>
-<h1 id="motivation-and-scope">1. Motivation and Scope</h1>
-<p><strong>Why CFDs, and why cost comes first.</strong> Every CFD trade pays a spread (the difference between the buy and sell price) and sometimes a commission, and positions held overnight also bear financing (swap) charges. Together these are the transaction costs, so any edge must first cover them before it can earn anything. The more frequent the trades, the larger the cost relative to the edge you can reasonably expect. For me, cost is therefore not a technical detail but the first condition: before searching for anything, I check how much edge is required for a system to profit net of costs.</p>
-<p><strong>What I call an edge.</strong> An edge is a positive expectancy after real costs that persists outside the sample in which it was found, meaning on data that played no role in selecting it. A result that appeared only in development data, only before costs, or only at one isolated parameter value is not an edge in my view. It is a question.</p>
-<p><strong>Why I am writing this.</strong> I have found that what separates reliable work from misleading work is the method, not the idea. I wanted to document it as it is, including the mistakes, the tools that turned out to be wrong, and the directions that were closed.</p>
-<p><strong>What this article is not.</strong> It is not a recommendation of any strategy, instrument or trading style, and it promises no profits. It does not refer to brokers or funding companies by name and does not attribute intentions to them. Nor does it claim that profit is impossible; it describes what was tested and what was not.</p>
-<p><strong>How to read it.</strong> It is written as short descriptions of principles and of cases in which each principle prevented a mistake, with almost no numbers, because its purpose is to present the process rather than the results. Sections 2 to 5 are more technical, and a reader mainly interested in the checklist can jump straight to Section 6. Anyone who wants to see the tests behind the descriptions is welcome to contact me privately.</p>
-<h1 id="data-traps-and-backtesting-mistakes-guilty-until-proven-otherwise">2. Data Traps and Backtesting Mistakes: Guilty Until Proven Otherwise</h1>
-<p>Before getting to a single hypothesis, it is worth saying something unflattering: most of the “findings” I came across along the way were not in the market but in the data and the tools. My starting point is therefore that data is guilty until proven otherwise, and every test begins with it.</p>
-<p><strong>A result that is too good.</strong> An unusually impressive statistic turned out, in my case, to be a one-hour timestamp misalignment in part of the dataset. Since then the rule is that “too good” triggers a data check, not a celebration. In a competitive market, an exceptional result is first of all a suspected error, and only then a hypothesis.</p>
-<p><strong>The tools themselves.</strong> The tools I built are not exempt from testing either:</p>
-<ul>
-<li><p>A synthetic data generator with a small positive bias. It was discovered because on pure noise data the result must come out at zero before costs.</p></li>
-<li><p>A feature with no variance that produced perfect significance because of a numerical glitch. It now returns an explicit missing value.</p></li>
-<li><p>A file opened in a spreadsheet that irreversibly lost its timestamps. The rule: research files are opened only with programming tools.</p></li>
-</ul>
-<p><strong>Testing the engine before the market.</strong> Before any run on real data, the engine runs on synthetic data and on random entries. The expectation is clear: with no underlying edge, performance before costs should be approximately zero, and after costs it should equal minus the costs. Any systematic deviation is a bug in the data or the engine, not a finding.</p>
-<p><strong>Comparing sources.</strong> When more than one data source is available, I check that candles move together and by the same amount, and that the difference between sources is smaller than the cost. If not, a small edge found on one source may not exist on the other.</p>
-<p><strong>The spread column.</strong> In demo data the spread column does not reflect the market: the median jumps between years regardless of reality, and a quarter of the candles show zero. So I do not take cost from the file. Cost is measured separately, expressed in R (the amount risked on a trade, usually the distance from entry to stop), and shown with a sensitivity range.</p>
-<p><strong>One expensive hour.</strong> One model looked very confident on certain trades. It turned out that the trades clustered at the rollover hour (the daily market changeover), when the spread is several times higher than usual, and the model had learned to recognize the hour rather than the market. Removing the hour and the spread from the features left predictive power almost unchanged, but the “confidence” disappeared. What looked like a signal was an artifact of cost.</p>
-<p><strong>Clocks.</strong> Trading data arrives in server time, and daylight saving time is not necessarily the same across sources: some follow US rules and some follow European rules, and in the weeks in between one source lags by an hour. In one test, the timestamps of an economic calendar were fixed all year while the ticks moved to daylight saving time. Uncorrected, every summer event would have been measured an hour before its release, and “no reaction” would almost certainly have been the result. I set the correction rule by timing alone, meaning by which hours the activity around the release had shifted, without looking at the direction of the move, so that the correction itself would not introduce bias. For periods in which alignment was not verified, time-dependent strategies are not tested.</p>
-<h1 id="the-protocol-decisions-before-results-and-counting-your-attempts">3. The Protocol: Decisions Before Results, and Counting Your Attempts</h1>
-<p>Every look at the data is a degree of freedom. If you look enough times, something will always appear. The protocol exists to reduce the number of opportunities to fool myself.</p>
-<p><strong>A hypothesis written in advance.</strong> Before every run I record the economic mechanism, the parameters, the threshold, the stopping conditions and the expectation. The first question is always who is on the other side of the trade and why they would accept it (a hedging need, a structural constraint, a different time horizon). Without an answer, there is no hypothesis, only staring at a chart.</p>
-<p><strong>Edge before model.</strong> First test the raw edge against a simple baseline, without a model, and only afterwards, if at all, add a model for refinement.</p>
-<p><strong>Freezing.</strong> The protocol and the engine are signed with a hash. Any change is a new version, with a line in the exceptions log. This way I cannot “fix a little” after seeing a result.</p>
-<p><strong>An attempt budget.</strong> A cap on the number of runs on real data is set in advance, and an append-only log is kept. Every attempt is counted, including the failed ones, because that is the only way to know how likely it is that a positive result is accidental. The count also feeds the multiple-testing correction.</p>
-<p><strong>Data splits.</strong> A development period, a validation period, and a final test that is touched once. A result that looks good in development and disappears in validation is information, not failure.</p>
-<p><strong>Noise calibration.</strong> In my view the most important test: run the entire search process, not just the winner, on data in which the relationship under test has been deliberately broken (shuffling, sign flipping, circular shifting). If the real winner does not stand out from the winners found in noise data, what was found is likely an artifact of the search itself. A single peak in a huge parameter grid is judged against the peaks in noise, not against zero. The null method must be chosen carefully: it should break only the relationship being tested, without destroying other properties of the data such as serial dependence or volatility structure.</p>
-<p><strong>Cost as an obstacle.</strong> Before searching, I calculate how much gross edge is required for the system to profit net of costs, in R. A result smaller than the cost is not a result. The ratio between cost and edge determines in advance which frequencies and which instruments are even worth testing.</p>
-<p><strong>Statistical power.</strong> Frequent entries produce many trades, but they overlap and are dependent, so the effective sample size, meaning the number of independent events, is much smaller than the raw trade count. I calculate in advance how many events are needed to detect an edge of the size that matters, and if there are not enough, I say so. “Not found” does not mean “does not exist.”</p>
-<p><strong>Tools.</strong> I use the approach of López de Prado: triple-barrier labeling (defining each trade’s outcome by a profit target, a stop or a time limit), cross-validation with purging and an embargo (preventing information from leaking between overlapping trades), uniqueness weights (reducing the weight of overlapping samples), and correction for multiple testing (Bonferroni and false discovery rate procedures). None of it is my innovation, only consistent use of existing tools.</p>
-<p><strong>Research–execution parity.</strong> If something is meant to run live, I build a replica in the execution platform from the start and verify that the trades are identical. When this is built at the end, gaps are found when it is already too late to fix them.</p>
-<p><strong>A decision rule set in advance.</strong> This includes the rule that “no edge” is a valid result, and that no one changes direction, adds combinations, or reinterprets after seeing the results.</p>
-<h1 id="what-the-process-caught">4. What the Process Caught</h1>
-<p>A methodology is tested in the cases where it prevents a mistake. Here are several cases from my work, without numbers, to show what each rule in the protocol does in practice.</p>
-<p><strong>An excellent model that failed against reality.</strong> A filtering model on a mean-reversion strategy looked excellent in the research environment, with high separation power that was stable out of sample. When I tested it in an execution environment, an EA on a live market feed with measured real spreads (no real money was traded), the edge vanished: the targets I had chosen were too tight relative to the measured costs. The lesson is that trade targets are set in advance according to realistic costs, and that the match between research and execution environments is built from the first step, not at the end.</p>
-<p><strong>Risk management did not create expectancy.</strong> I tested what stop rules, targets and position sizing do to trades that entered at random. In the random-entry tests I ran, they changed the distribution of outcomes, meaning how often and by how much you win and lose, but did not produce positive expectancy after costs. They did not replace the need for an underlying edge. When a management rule looks profitable, the first suspect is a property of the market it happens to exploit, not the rule itself.</p>
-<p><strong>A model is not an edge.</strong> I ran machine-learning models from different families, linear, tree-based and others, on several strategies. In my tests, when there was no underlying edge, all the families reached the same result: no signal, and the model learned at most cost features or noise. A model can in principle uncover conditional relationships that a simple baseline misses, and it may refine a solid edge that already exists, but that added value has to be demonstrated out of sample and against noise. The hypothesis and a simple baseline therefore come before the model, not the other way around.</p>
-<p><strong>A narrow peak in a huge grid.</strong> In a broad search on a mean-touch strategy, a “pocket” was found that looked profitable even out of sample. A neighborhood check showed that every small step away from it, in the moving average, the parameter or the target, returned the result to negative. In addition, the configuration that led in development was negative in validation. The lesson is that a single peak among tens of thousands of options is likely an artifact of the search, so stable neighborhoods are required and the winner is tested against the winners in noise.</p>
-<p><strong>An effect that looks specific and is not.</strong> I tested the hypothesis that movement in the hour before a fixed market event predicts the rest of the day. A consistent effect was found, but running the same test on all hours of the day (a placebo test, meaning on hours that should not show an effect) showed that it exists in almost every hour. It is a general mean-reversion phenomenon, not a phenomenon of the event, and the hypothesis was therefore rejected. This leads to a methodological preference: hypotheses whose direction derives from an external variable (an interest rate, a calendar date) are preferable to hypotheses whose direction derives from the price itself, because the latter are easily confused with general phenomena.</p>
-<p><strong>When the data cannot answer.</strong> I wanted to test whether an interest rate differential predicts the direction of a currency pair. It turned out that over the whole period there were only one or two distinct interest-rate regimes, so thousands of daily observations are effectively one or two experiments. It therefore cannot be tested on a single pair. Statistical power is determined by the number of independent regimes, not by the number of candles, and the right way is a cross-currency structure. The hypothesis itself was not rejected, only the way of testing it.</p>
-<p><strong>A decision rule set in advance that closes a direction.</strong> I tested whether anything remains for continuation or reversal after the market’s reaction to macro releases. The rule was set before the run: a cell passes only if the multiple-testing correction confirms it, the net profit is positive, and the sign is consistent in both halves of the time range. No cell passed, and the direction was closed. Cost was not the explanation. The test also relied on clock alignment that was verified for only part of the period, so I stated explicitly that a null result on data not fully verified is weaker than it looks.</p>
-<p><strong>“Survived” is not “validated.”</strong> One of the methods I tested, entry rules based on moving averages with per-pair optimization, was the only one that showed a positive sign. I examined it with walk-forward windows, and a configuration counted only if it passed all of them. But the configurations were selected from a large grid, with no untouched holdout window, and several parameters kept “escaping” to the edge of the grid until it was widened. I therefore call it a hint, not an edge. The same goes for another strategy that passed several significance tests: it was assessed against a cumulative number of attempts, and without validation in an execution environment I have no reason to claim that it works.</p>
-<p><strong>When to stop.</strong> On one mean-reversion strategy I ran a feature search with linear methods and several families of nonlinear models. All reached the same result: no signal. I judged that the strategy’s mechanism did not fit the type of features I tested, and I stopped rather than keep searching. In a different project, where the features were directly tied to the strategy’s mechanism, the result was different. The lesson is twofold: stopping conditions are set in advance, and features are chosen by mechanism rather than by availability.</p>
-<p><strong>An open question, not evidence.</strong> In gold, a phenomenon was found at one hour of the day that looks strong when you view the entire period. On closer inspection it is concentrated in recent years, fails in the early period after costs, and depends on server time. All the hypotheses set in advance for gold failed, and this hour came up only in a retrospective search. I therefore record it as an open question, not as evidence.</p>
-<h1 id="the-limits-of-this-work">5. The Limits of This Work</h1>
-<p>This work describes a method and a personal experience, not a conclusion about the market. Every negative result says something narrow: under the definitions tested, on the data I had, and under my cost assumptions, no edge was found that met the criteria set in advance. That does not mean such an edge does not exist or will not appear in the future.</p>
-<p>Several things limit what can be learned from it. The data and the costs are approximate and do not belong to any particular account over time. The tests focused on few instruments and limited periods. A small edge requires a very large sample, and not every test had one. Attempts accumulate across projects and abandoned ideas, and neither a log within a single project nor the correction applied to it covers that wider history. Finally, I chose which hypotheses to test and when to stop. The protocol reduces that bias but does not eliminate it, and the work has not been independently reviewed.</p>
-<p>All of this holds in the other direction as well: what looked positive in the past guarantees nothing about the future.</p>
-<h1 id="a-checklist-before-risking-money">6. A Checklist Before Risking Money</h1>
-<p>This section is for anyone who wants to trade CFDs with their own money. It does not say “do not trade.” It lays out what a serious check requires, so that you do not fool yourself before you invest. If one of the questions is left without an answer, that is information in itself.</p>
-<ol type="1">
-<li><p><strong>Is the data clean and verifiable?</strong> Have you checked clocks, daylight saving time, gaps, and agreement between sources? If a result looks excellent, suspect the data first.</p></li>
-<li><p><strong>Is the cost real?</strong> Spread, commission, slippage and overnight financing (swap) should be measured in the account where you will trade, at the hours when you will trade, not taken from a historical file. Spread varies by hour and by period, so add a sensitivity range. A result that holds only at an unusually low cost is not a result.</p></li>
-<li><p><strong>Do you know who is on the other side?</strong> If you cannot explain why someone would take the other side (a hedger, a forced seller, a different horizon), you are probably seeing a shape in a chart.</p></li>
-<li><p><strong>Does the model beat a simple baseline out of sample and against noise?</strong> If success exists only with a complex model, suspect overfitting or cost first. A model can refine an edge that already exists, but its added value has to be demonstrated.</p></li>
-<li><p><strong>Was the hypothesis written before the test?</strong> Including a success threshold, a failure condition, and what you will do if the result is null. A hypothesis formulated after you saw the data is a description of the past.</p></li>
-<li><p><strong>Did you count every attempt?</strong> Every parameter, every version, and every “let’s just check one more thing.” A positive result out of dozens or hundreds of attempts is almost always accidental, unless it has been corrected for.</p></li>
-<li><p><strong>Does the winner stand out against noise?</strong> Run the same search on data in which the relationship has been broken (shuffling or sign flipping). If something similar is found there too, what you found is likely an artifact of the search.</p></li>
-<li><p><strong>Is there a sample you have not touched?</strong> An out-of-sample window set aside in advance and tested once. If you checked it several times, it is already part of development.</p></li>
-<li><p><strong>Is the sample large enough?</strong> Frequent entries overlap, so they are statistically smaller than they look. How many independent events do you have, and how many are needed to detect an edge of the size that matters? And note that “not found” does not mean “does not exist.”</p></li>
-<li><p><strong>Is the result stable in its neighborhood?</strong> A small change in a parameter, an asset or a period should not reverse it. A single peak is a warning.</p></li>
-<li><p><strong>Did you test against random entries?</strong> The expectation is cost alone. Any deviation from that points to an error.</p></li>
-<li><p><strong>Does live execution behave like the research?</strong> Check in a demo account and with a small amount that trades, prices and costs match what you predicted, before you scale up.</p></li>
-<li><p><strong>Did you decide in advance when to stop?</strong> A loss limit, a number of trades, and a failure condition. Decisions made mid-drawdown are rarely objective.</p></li>
-</ol>
-<h1 id="about-the-author">About the Author</h1>
-<p>I build analysis and testing infrastructure: data cleaning and auditing, experiment and hypothesis design, and tools that make it possible to test ideas reliably. I learned and applied this process in financial markets, and I am available for remote, project-based work in data analysis and validation. The principles described here, such as preventing information leakage, calibrating against noise and keeping a versioned log of experiments, apply wherever hypotheses are tested, not only in markets. To talk, or to critique the method: <a href="mailto:avi.d.data@outlook.com"><u>avi.d.data@outlook.com</u></a>. The article is also available at <a href="https://github.com/avi-d-data/how-to-test-a-trading-edge"><u>github.com/avi-d-data/how-to-test-a-trading-edge</u></a>.</p>
-<p><strong>Disclaimer.</strong> This article describes a method and a personal experience. It is not investment advice and is not a substitute for licensed advice. Trading CFDs involves a significant risk of financial loss, and the information is based on past data and promises nothing.</p>
-</article>
-</main>
-<script data-goatcounter="https://avi-d-data.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
-</body>
-</html>
+<div align="left">BS"D</div>
+
+# How to Test a Trading Edge Before Risking Money
+
+*Data traps, noise calibration and counting attempts: a methodology from CFD markets*
+
+**[עברית](README.he.md)** | English
+
+A practitioner's guide to testing a trading edge before risking money: data traps, backtesting mistakes, counting attempts and noise calibration.
+
+**Read the article online:** [English](https://avi-d-data.github.io/how-to-test-a-trading-edge/) | [עברית](https://avi-d-data.github.io/how-to-test-a-trading-edge/he/)
+
+**Download:** [PDF (English)](how-to-test-a-trading-edge.pdf) | [PDF (Hebrew / עברית)](how-to-test-a-trading-edge-he.pdf)
+
+## What this is
+
+A methodology article, not a results article. It describes how I search for an edge in CFD markets and what happens to most ideas once they are tested seriously: how to treat data as suspect, how to lock in hypotheses before looking at results, when counting attempts becomes critical, and what calibrating against noise reveals.
+
+## What's inside
+
+- **How I work:** from a strategy idea to explicit, testable rules.
+- **1. Motivation and scope:** why costs come first.
+- **2. Data traps and backtesting mistakes:** guilty until proven otherwise.
+- **3. The protocol:** decisions before results, and counting your attempts.
+- **4. What the process caught:** real cases where a result turned out to be an artifact.
+- **5. The limits of this work.**
+- **6. A checklist before risking money.**
+
+## Who it's for
+
+- Retail traders who are considering risking their own money and want to know what a serious check involves.
+- Analysts, researchers and data people interested in leakage, multiple testing, out-of-sample discipline and experiment logging, which apply wherever hypotheses are tested, not only in markets.
+
+## Topics covered
+
+Backtesting, data quality and integrity, realistic transaction costs, pre-registered research protocols, multiple testing, noise calibration, out-of-sample validation.
+
+## About the author
+
+Avi D. I build analysis and testing infrastructure: data cleaning and auditing, experiment and hypothesis design, and tools for testing ideas reliably. I am available for remote, project-based work in data analysis and validation.
+
+To talk, or to critique the method: [avi.d.data@outlook.com](mailto:avi.d.data@outlook.com)
